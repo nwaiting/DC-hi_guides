@@ -14,11 +14,10 @@ import pandas as pd
 import os
 import time
 import pickle
-
 import sys
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+#reload(sys)
+#sys.setdefaultencoding('utf-8')
 
 """Model assessment tools.
 """
@@ -59,10 +58,15 @@ def get_action_rate_before_jp(order_type=1):
     dict_last_action_rate = dict()
     for i in range(len(action_types)):
         dict_last_action_rate[action_types[i]] = action_counts[i] / n_total_actions
-    pickle.dump(dict_last_action_rate, open(save_path, 'wb'))
+    try:
+        pickle.dump(dict_last_action_rate, open(save_path, 'wb'))
+    except Exception as e:
+        print("error action rate {} =={}==".format(e, dict_last_action_rate))
     print('Save dict_last_action_rate to {}'.format(save_path))
     return dict_last_action_rate
 
+def join2(s):
+    return "{0}_{1}".format(s[0],s[1])
 
 def get_pair_rate_before_jp(order_type=1):
     """统计订单下单前的连续两个动作比例。"""
@@ -76,11 +80,12 @@ def get_pair_rate_before_jp(order_type=1):
     df_actions = pd.concat([df_action_train, df_action_test])
     df_actions = pd.merge(df_actions, df_history[['userid', 'orderTime_{}'.format(order_type)]], on='userid',
                           how='left')
-    df_actions['last_userid'] = df_actions.userid.shift(1)
+    df_actions['last_userid'] = df_actions.userid.shift(1) #向下移
     df_actions['last_actionType'] = df_actions.actionType.shift(1)
     df_actions = df_actions.loc[df_actions.last_userid == df_actions.userid].copy()
     action_pairs = list(zip(df_actions.last_actionType.values, df_actions.actionType.values))
-    action_pairs = map(lambda s: str(int(s[0])) + '_' + str(int(s[1])), action_pairs)
+    #action_pairs = map(lambda s: str(int(s[0])) + '_' + str(int(s[1])), action_pairs)
+    action_pairs = map(join2, action_pairs)
     df_actions['action_pair'] = action_pairs
 
     df_actions['time_after_order'] = df_actions['actionTime'] - df_actions['orderTime_{}'.format(order_type)]
@@ -93,10 +98,16 @@ def get_pair_rate_before_jp(order_type=1):
     dict_last_pair_rate = dict()
     for i in range(len(pair_types)):
         dict_last_pair_rate[pair_types[i]] = pair_counts[i] / n_total_pairs
-    pickle.dump(dict_last_pair_rate, open(save_path, 'wb'))
+    try:
+        pickle.dump(dict_last_pair_rate, open(save_path, 'wb'))
+    except Exception as e:
+        print("error pair rate {} =={}=={}=={}==".format(e, dict_last_pair_rate, type(dict_last_pair_rate), save_path))
     print('Save dict_last_pair_rate to {}'.format(save_path))
     return dict_last_pair_rate
 
+
+def join3(s):
+    return "{0}_{1}_{2}".format(s[0],s[1],s[2])
 
 def get_triple_rate_before_jp(order_type=1):
     """统计订单下单前的连续3个动作比例。"""
@@ -110,7 +121,7 @@ def get_triple_rate_before_jp(order_type=1):
     df_actions = pd.concat([df_action_train, df_action_test])
     df_actions = pd.merge(df_actions, df_history[['userid', 'orderTime_{}'.format(order_type)]], on='userid',
                           how='left')
-    df_actions['last_userid_2'] = df_actions.userid.shift(2)
+    df_actions['last_userid_2'] = df_actions.userid.shift(2)    #userid
     df_actions['last_actionType_2'] = df_actions.actionType.shift(2)
     df_actions['last_userid'] = df_actions.userid.shift(1)
     df_actions['last_actionType'] = df_actions.actionType.shift(1)
@@ -118,7 +129,8 @@ def get_triple_rate_before_jp(order_type=1):
 
     action_triples = list(
         zip(df_actions.last_actionType_2.values, df_actions.last_actionType.values, df_actions.actionType.values))
-    action_triples = map(lambda s: str(int(s[0])) + '_' + str(int(s[1])) + '_' + str(int(s[2])), action_triples)
+    #action_triples = map(lambda s: str(int(s[0])) + '_' + str(int(s[1])) + '_' + str(int(s[2])), action_triples)
+    action_triples = map(join3, action_triples)
     df_actions['action_triple'] = action_triples
 
     df_actions['time_after_order'] = df_actions['actionTime'] - df_actions['orderTime_{}'.format(order_type)]

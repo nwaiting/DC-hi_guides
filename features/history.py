@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*- 
+# -*- coding:utf-8 -*-
 
 from __future__ import print_function
 from __future__ import division
@@ -100,10 +100,8 @@ def get_country_count(df_history):
     df_total_count = df_history[['userid', 'country']].groupby(["userid"], as_index=False).count()
     df_total_count.rename(columns={'country': 'n_total_trip'}, inplace=True)
     # 每个用户每个国家的次数
-    df_country_count = df_history.groupby(["userid", "country"])["country"].agg(
-        [("country_count", np.size)]).reset_index()
-    df_country_count = pd.pivot_table(df_country_count, values="country_count", index="userid",
-                                      columns="country").reset_index()
+    df_country_count = df_history.groupby(["userid", "country"])["country"].agg([("country_count", np.size)]).reset_index()
+    df_country_count = pd.pivot_table(df_country_count, values="country_count", index="userid",columns="country").reset_index()
     df_country_count = df_country_count.fillna(0)
     df_country_count.columns = ['userid'] + ['country_{}'.format(i) for i in range(8)]
     df_country_count = pd.merge(df_total_count, df_country_count, on='userid', how='left')

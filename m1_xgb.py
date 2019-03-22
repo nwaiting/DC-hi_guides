@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*- 
+# -*- coding:utf-8 -*-
 
 from __future__ import print_function
 from __future__ import division
@@ -68,12 +68,17 @@ def xgb_fit(config, X_train, y_train):
 
 def xgb_predict(model, X_test, save_result_path=None):
     dtest = xgb.DMatrix(X_test)
-    y_pred_prob = model.predict(dtest)
-    if save_result_path:
-        df_result = df_future_test
-        df_result['orderType'] = y_pred_prob
-        df_result.to_csv(save_result_path, index=False)
-        print('Save the result to {}'.format(save_result_path))
+    y_pred_prob = None
+    try:
+        y_pred_prob = model.predict(dtest)
+    except Exception as e:
+        print("err {0} data {1}".format(e, dtest))
+    else:
+        if save_result_path:
+            df_result = df_future_test
+            df_result['orderType'] = y_pred_prob
+            df_result.to_csv(save_result_path, index=False)
+            print('Save the result to {}'.format(save_result_path))
     return y_pred_prob
 
 
@@ -163,7 +168,7 @@ if __name__ == '__main__':
     """
     # get feature
     feature_path = 'features/'
-    train_data, test_data = load_feat(re_get=False, feature_path=feature_path)
+    train_data, test_data = load_feat(re_get=True, feature_path=feature_path)
     train_feats = train_data.columns.values
     test_feats = test_data.columns.values
     drop_columns = list(filter(lambda x: x not in test_feats, train_feats))
